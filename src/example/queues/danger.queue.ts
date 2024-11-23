@@ -6,4 +6,5 @@ export const danger: IQueueProcess<{ message: string }> = {
     console.log("Hey ", data.message);
     await q.shutdown();
   },
+  groupName: "app1",
 };

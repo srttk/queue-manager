@@ -5,7 +5,8 @@
   "main": "dist/lib/index.js",
   "scripts": {
     "test": "vitest",
-    "example":"tsx ./src/example/app.ts"
+    "example":"tsx ./src/example/app.ts",
+    "example2":"tsx ./src/example/app2.ts"
   },
   "repository": {
     "type": "git",

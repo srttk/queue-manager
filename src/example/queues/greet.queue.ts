@@ -9,4 +9,5 @@ export const greet: IQueueProcess<GreetPayload> = {
   action: async ({ data }) => {
     console.log(`Hello ${data.name}`);
   },
+  groupName: "app1",
 };
