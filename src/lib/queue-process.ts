@@ -7,4 +7,6 @@ export interface IQueueProcess<Payload = object> {
   options?: Partial<QueueOptions>;
   defaultJobOptions?: JobsOptions;
   workerOptions?: Partial<WorkerOptions>;
+  // Events
+  onCompleted?(): void;
 }

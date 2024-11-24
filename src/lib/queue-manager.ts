@@ -95,6 +95,11 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
         let _w = new Worker(qp.name, qp.process, {
           connection: this.connection,
         });
+
+        if (qp?.onCompleted) {
+          _w.on("completed", qp.onCompleted);
+        }
+
         this.workers.push(_w);
       }
     });
@@ -129,14 +134,14 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
     jobOptions?: JobsOptions
   ) {
     // Check item exists on `this._queueMap`
-    let qMapItem: IQueueProcess = this._queueMap[name];
+    let qMapItem = this.getFromMapByName(name);
 
     if (!qMapItem) {
       console.warn(`Queue ${String(name)} not found.`);
       return null;
     }
     // Get queue
-    let queue = this.queues.find((q) => q.name === qMapItem.name);
+    let queue = this.getQueueByName(qMapItem.name);
 
     if (!queue) {
       console.warn(`Queue ${String(name)} not initialized.`);
@@ -153,13 +158,49 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
     return job;
   }
 
-  // Get queues
+  // Get all registered queues
   getQueues() {
     return this.queues;
   }
 
-  // Get workers
+  // Get queue by name
+  getQueue<K extends keyof T>(name: K) {
+    let mapItem = this.getFromMapByName(name);
+    if (!mapItem) return;
+
+    return this.getQueueByName(mapItem.name);
+  }
+
+  // Get all registered workers
   getWorkers() {
     return this.workers;
+  }
+
+  // Get worker by name
+  getWorker<K extends keyof T>(name: K) {
+    let mapItem = this.getFromMapByName(name);
+    if (!mapItem) return;
+
+    return this.getWorkerByName(mapItem.name);
+  }
+
+  // Get IQueueProcess map item from `this.pmap`
+  private getFromMapByName<K extends keyof T>(name: K) {
+    let mapItem = this._queueMap[name];
+    if (!mapItem) return;
+    return mapItem as IQueueProcess;
+  }
+
+  // Get initialized Bullmq queue
+
+  private getQueueByName(name: string) {
+    let _queue = this.queues.find((queue) => queue.name === name);
+    return _queue;
+  }
+
+  // Get initialized Bullmq worker
+  private getWorkerByName(name: string) {
+    let _worker = this.workers.find((worker) => worker.name === name);
+    return _worker;
   }
 }

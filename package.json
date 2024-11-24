@@ -1,7 +1,7 @@
 {
   "name": "@srttk/queue",
   "version": "1.0.0",
-  "description": "Simplified BullMQ Queues",
+  "description": "BullMQ queues simplified.",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
   "scripts": {

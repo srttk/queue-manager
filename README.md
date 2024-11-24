@@ -1,6 +1,6 @@
-# @srttk/queue
+# @srttk/queue 🎢
 
-A simplified wrapper around BullMQ for easy queue management in Node.js applications. This package provides a straightforward way to define, manage, and process queues with minimal boilerplate.
+A simplified wrapper around BullMQ for easy queue management in Node.js applications. provides a straightforward way to define, manage, and process queues with minimal boilerplate.
 
 ## Features
 
@@ -60,11 +60,11 @@ import queue from "./queue"
 
 async function start() {
   // Initialize queue manager
-  await queues.registerQueues();
-  await queues.startWorkers();
+  await queue.registerQueues();
+  await queue.startWorkers();
 
   // Add job to queue
-  await queues.addJob("greet", "my-job", { name: "Sarath" });
+  await queue.addJob("greet", "my-job", { name: "Luke Skywalker" });
 }
 
 start()
