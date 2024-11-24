@@ -6,6 +6,7 @@ import {
   RedisConnection,
   ConnectionOptions,
   QueueEvents,
+  JobsOptions,
 } from "bullmq";
 import { IQueueProcess } from "./queue-process";
 
@@ -16,7 +17,7 @@ type QueueManagerConfig = {
   connection: ConnectionOptions;
 };
 
-export class QueueManager<T extends Record<string, IQueueProcess<object>>> {
+export class QueueManager<T extends Record<string, IQueueProcess>> {
   private _queueMap: T;
 
   private queues: Queue[] = [];
@@ -26,14 +27,14 @@ export class QueueManager<T extends Record<string, IQueueProcess<object>>> {
 
   public events: QueueEvents;
 
-  private connectionOptions: ConnectionOptions;
+  private connection: ConnectionOptions;
 
   constructor(queueMaps: T, config?: QueueManagerConfig) {
-    this._queueMap = queueMaps || {};
+    this._queueMap = queueMaps;
     this.config = config;
 
     if (config?.connection) {
-      this.connectionOptions = config.connection;
+      this.connection = config.connection;
     }
   }
 
@@ -49,8 +50,10 @@ export class QueueManager<T extends Record<string, IQueueProcess<object>>> {
     }
 
     queues.map((q) => {
+      let _options = { ...(q?.options || {}) };
       let _queue = new Queue(q.name, {
-        connection: this.connectionOptions,
+        connection: this.connection,
+        ..._options,
       });
       this.queues.push(_queue);
     });
@@ -66,7 +69,7 @@ export class QueueManager<T extends Record<string, IQueueProcess<object>>> {
   private onQueueEvents() {
     // TODO: Add events
     this.events = new QueueEvents(`queue-events`, {
-      connection: this.connectionOptions,
+      connection: this.connection,
     });
   }
 
@@ -89,8 +92,8 @@ export class QueueManager<T extends Record<string, IQueueProcess<object>>> {
       let exists = this.workers.find((w) => w.name === qp.name);
       if (!exists) {
         // Initialize worker instance
-        let _w = new Worker(qp.name, qp.action, {
-          connection: this.connectionOptions,
+        let _w = new Worker(qp.name, qp.process, {
+          connection: this.connection,
         });
         this.workers.push(_w);
       }
@@ -122,10 +125,11 @@ export class QueueManager<T extends Record<string, IQueueProcess<object>>> {
   async addJob<K extends keyof T>(
     name: K,
     jobname: string,
-    payload: T[K] extends IQueueProcess<infer P> ? P : never
+    payload: T[K] extends IQueueProcess<infer P> ? P : never,
+    jobOptions?: JobsOptions
   ) {
     // Check item exists on `this._queueMap`
-    let qMapItem = this._queueMap[name];
+    let qMapItem: IQueueProcess = this._queueMap[name];
 
     if (!qMapItem) {
       console.warn(`Queue ${String(name)} not found.`);
@@ -139,7 +143,12 @@ export class QueueManager<T extends Record<string, IQueueProcess<object>>> {
       return null;
     }
 
-    let job = await queue.add(jobname, payload);
+    let _jobOptions: JobsOptions = {
+      ...(qMapItem.defaultJobOptions || {}),
+      ...(jobOptions || {}),
+    };
+
+    let job = await queue.add(jobname, payload, _jobOptions);
 
     return job;
   }

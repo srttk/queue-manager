@@ -16,9 +16,9 @@ start()
       });
     }, 5000);
 
-    // setTimeout(async () => {
-    //   await queues.addJob("danger", "close ", { message: "Good bye" });
-    // }, 10000);
+    setTimeout(async () => {
+      await queues.addJob("danger", "close ", { message: "Good bye" });
+    }, 10000);
   })
   .catch((e) => {
     console.error("App start error", e);

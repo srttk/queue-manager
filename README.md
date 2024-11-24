@@ -1,4 +1,4 @@
-# @srttk/queue-manager
+# @srttk/queue
 
 A simplified wrapper around BullMQ for easy queue management in Node.js applications. This package provides a straightforward way to define, manage, and process queues with minimal boilerplate.
 
@@ -13,7 +13,7 @@ A simplified wrapper around BullMQ for easy queue management in Node.js applicat
 ## Installation
 
 ```bash
-npm install @srttk/queue-manager
+npm install @srttk/queue bullmq
 ```
 
 ## Basic Usage
@@ -24,7 +24,7 @@ Create a queue processor by defining a type for your payload and implementing th
 
 ```typescript
 // greet.ts
-import { IQueueProcess } from "@srttk/queue-manager"
+import { IQueueProcess } from "@srttk/queue"
 
 type GreetPayload = {
   name: string
@@ -32,7 +32,7 @@ type GreetPayload = {
 
 export const greet: IQueueProcess<GreetPayload> = {
   name: "greet",
-  action: async ({ data }) => {
+  process: async ({ data }) => {
     console.log(`Hello ${data.name}`)
   }
 }
@@ -44,7 +44,7 @@ Set up your queue manager with your defined queues:
 
 ```typescript
 // queue.ts
-import { QueueManager } from "@srttk/queue-manager"
+import { QueueManager } from "@srttk/queue"
 import { greet } from './greet'
 
 export default new QueueManager({ greet })
@@ -91,7 +91,7 @@ new QueueManager(queues: Record<string, IQueueProcess>)
 ```typescript
 interface IQueueProcess<T> {
   name: string;
-  action: (job: { data: T }) => Promise<void>;
+  process: (job: { data: T }) => Promise<void>;
 }
 ```
 
@@ -119,4 +119,4 @@ MIT
 
 ## Support
 
-For issues and feature requests, please use the [GitHub issues page](https://github.com/yourusername/queue-manager/issues).
+For issues and feature requests, please use the [GitHub issues page](https://github.com/srttk/queue/issues).

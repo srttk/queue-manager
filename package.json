@@ -1,16 +1,18 @@
 {
-  "name": "@srttk/queue-manager",
+  "name": "@srttk/queue",
   "version": "1.0.0",
-  "description": "Simplyfied BullMQ Queues",
+  "description": "Simplified BullMQ Queues",
   "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
   "scripts": {
     "test": "vitest",
-    "example":"tsx ./src/example/app.ts",
-    "example2":"tsx ./src/example/app2.ts"
+    "example": "tsx ./src/example/app.ts",
+    "example2": "tsx ./src/example/app2.ts",
+    "build": "pkgroll"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/srttk/queue-manager.git"
+    "url": "git+ssh://git@github.com/srttk/queue.git"
   },
   "keywords": [
     "BullMQ",
@@ -20,13 +22,15 @@
   "author": "Sarath TK <sarath.tk@gmx.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/srttk/queue-manager/issues"
+    "url": "https://github.com/srttk/queue/issues"
   },
-  "homepage": "https://github.com/srttk/queue-manager#readme",
+  "homepage": "https://github.com/srttk/queue#readme",
   "packageManager": "pnpm@9.6.0+sha512.38dc6fba8dba35b39340b9700112c2fe1e12f10b17134715a4aa98ccf7bb035e76fd981cf0bb384dfa98f8d6af5481c2bef2f4266a24bfa20c34eb7147ce0b5e",
   "devDependencies": {
     "bullmq": "^5.29.1",
-    "tsx": "^4.19.2"
+    "pkgroll": "^2.5.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   },
   "peerDependencies": {
     "bullmq": "^5.29.1"
