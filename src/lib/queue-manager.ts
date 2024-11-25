@@ -17,6 +17,8 @@ type QueueManagerConfig = {
   connection: ConnectionOptions;
 };
 
+const DEFAULT_NAMESPACE = "default_queues";
+
 export class QueueManager<T extends Record<string, IQueueProcess>> {
   private _queueMap: T;
 
@@ -29,6 +31,8 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
 
   private connection: ConnectionOptions;
 
+  private shutdownTriggered: boolean = false;
+
   constructor(queueMaps: T, config?: QueueManagerConfig) {
     this._queueMap = queueMaps;
     this.config = config;
@@ -36,6 +40,10 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
     if (config?.connection) {
       this.connection = config.connection;
     }
+  }
+
+  get namespace() {
+    return this?.config?.namespace || DEFAULT_NAMESPACE;
   }
 
   registerQueues() {
@@ -52,9 +60,11 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
     queues.map((q) => {
       let _options = { ...(q?.options || {}) };
       let _queue = new Queue(q.name, {
+        prefix: this.namespace,
         connection: this.connection,
         ..._options,
       });
+
       this.queues.push(_queue);
     });
 
@@ -94,6 +104,7 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
         // Initialize worker instance
         let _w = new Worker(qp.name, qp.process, {
           connection: this.connection,
+          prefix: this.namespace,
         });
 
         if (qp?.onCompleted) {
@@ -103,26 +114,6 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
         this.workers.push(_w);
       }
     });
-  }
-
-  // Shutdown all
-  async shutdown() {
-    // await this.offQueueEvents();
-    // Off all workers
-    let $closeWorkers = this.workers.map((w) => {
-      return w.close();
-    });
-    await Promise.all($closeWorkers);
-
-    // Off all queues
-
-    let $closeQueues = this.queues.map((q) => {
-      return q.close();
-    });
-    await Promise.all($closeQueues);
-    console.log("closed workers");
-    let c = await this.workers[0].client;
-    await c.quit();
   }
 
   // Add job
@@ -202,5 +193,39 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
   private getWorkerByName(name: string) {
     let _worker = this.workers.find((worker) => worker.name === name);
     return _worker;
+  }
+
+  // Shutdown all
+  async shutdown() {
+    if (this.shutdownTriggered) {
+      return;
+    }
+
+    this.shutdownTriggered = true;
+
+    //Pause workers
+    if (this.workers?.length) {
+      let $pauseWorkers = this.workers.map((w) => {
+        return w.pause();
+      });
+      await Promise.all($pauseWorkers);
+    }
+
+    // Off all workers
+
+    if (this.workers?.length) {
+      let $closeWorkers = this.workers.map((w) => {
+        return w.close();
+      });
+      await Promise.all($closeWorkers);
+    }
+
+    //Off all queues
+    if (this.queues?.length) {
+      let $closeQueues = this.queues.map((q) => {
+        return q.close();
+      });
+      await Promise.all($closeQueues);
+    }
   }
 }
