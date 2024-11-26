@@ -1,4 +1,4 @@
-# @srttk/queue 🎢
+# @srttk/queue 🎡
 
 A simplified wrapper around BullMQ for easy queue management in Node.js applications. provides a straightforward way to define, manage, and process queues with minimal boilerplate.
 
@@ -67,8 +67,39 @@ async function start() {
   await queue.addJob("greet", "my-job", { name: "Luke Skywalker" });
 }
 
+
+
 start()
 ```
+
+
+## Graceful shutdown
+QueueManager provides a graceful shutdown mechanism to ensure that in-progress jobs are completed and resources are properly released when your application terminates.
+
+```typescript
+
+let signals = ["SIGINT", "SIGTERM"];
+signals.map((signal) => {
+  process.on(signal, async () => {
+    // close all queuee and workers
+    await queue.shutdown();
+  });
+});
+
+```
+
+## Namespace
+Namespaces allow you to isolate and group your queues, preventing naming conflicts across different applications or environments. By using namespaces, you can
+ - Separate queues for different applications
+ - Create isolated environments (development, staging, production)
+ - Avoid queue name collisions in shared infrastructure
+
+```typescript
+
+export default new QueueManager({ greet }, { namespace:"app1_development"})
+
+```
+
 
 ## API Reference
 

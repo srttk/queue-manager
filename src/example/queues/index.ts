@@ -3,8 +3,10 @@ import { greet } from "./greet.queue";
 import { danger } from "./danger.queue";
 import { groupGreet } from "./group-greet.queue";
 import { slowGreet } from "./slow-greet";
+import { events } from "./events";
+
 export default new QueueManager(
-  { greet, danger, groupGreet, slowGreet },
+  { greet, danger, groupGreet, slowGreet, events },
   {
     connection: {
       host: "localhost",

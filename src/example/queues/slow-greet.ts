@@ -7,6 +7,8 @@ export const slowGreet: IQueueProcess<{ name: string }> = {
     console.info("@slow-greet ", "started");
     await sleep(8000);
     console.info("@slow-greet", `Hello ${data.name}`);
-    console.info("@slow-greet ", "completed");
+  },
+  async onCompleted(job, result) {
+    console.info("@slow-greet ", job.id, "completed");
   },
 };
