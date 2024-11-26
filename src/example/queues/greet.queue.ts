@@ -4,10 +4,21 @@ type GreetPayload = {
   name: string;
 };
 
-export const greet: IQueueProcess<GreetPayload> = {
+type Result = {
+  message: string;
+};
+
+export const greet: IQueueProcess<GreetPayload, Result> = {
   name: "greet",
   process: async ({ data }) => {
-    console.log(`Hello ${data.name}`);
+    const message = `Hello ${data.name}`;
+    console.log(message);
+    return {
+      message,
+    };
   },
   groupName: "app1",
+  onCompleted: (job, result) => {
+    console.log("@greet:onComplete : ", job.id, " Completed, result: ", result);
+  },
 };

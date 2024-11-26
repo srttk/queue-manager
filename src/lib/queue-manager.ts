@@ -10,8 +10,6 @@ import {
 } from "bullmq";
 import { IQueueProcess } from "./queue-process";
 
-type QueuemanagerConnection = ConnectionOptions | RedisConnection;
-
 type QueueManagerConfig = {
   namespace?: string;
   connection: ConnectionOptions;
@@ -26,8 +24,6 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
   private workers: Worker[] = [];
 
   private config?: QueueManagerConfig;
-
-  public events: QueueEvents;
 
   private connection: ConnectionOptions;
 
@@ -68,26 +64,7 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
       this.queues.push(_queue);
     });
 
-    // TODO: Listen events
-    if (!this.events) {
-      // this.onQueueEvents();
-    }
-
     return this.queues;
-  }
-
-  private onQueueEvents() {
-    // TODO: Add events
-    this.events = new QueueEvents(`queue-events`, {
-      connection: this.connection,
-    });
-  }
-
-  private async offQueueEvents() {
-    if (!this.events) return;
-
-    await this.events.close();
-    await this.events.disconnect();
   }
 
   startWorkers(groupName: string | null = null) {
@@ -107,10 +84,43 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
           prefix: this.namespace,
         });
 
+        // Attach event handlers
+        if (qp?.onActive) {
+          _w.on("active", qp.onActive);
+        }
+
+        if (qp?.onClosed) {
+          _w.on("closed", qp.onClosed);
+        }
+
         if (qp?.onCompleted) {
           _w.on("completed", qp.onCompleted);
         }
 
+        if (qp?.onError) {
+          _w.on("error", qp.onError);
+        }
+        if (qp?.onDrained) {
+          _w.on("drained", qp.onDrained);
+        }
+
+        if (qp?.onFailed) {
+          _w.on("failed", qp.onFailed);
+        }
+
+        if (qp?.onPaused) {
+          _w.on("paused", qp.onPaused);
+        }
+        if (qp?.onProgress) {
+          _w.on("progress", qp.onProgress);
+        }
+        if (qp?.onReady) {
+          _w.on("ready", qp.onReady);
+        }
+        if (qp?.onStalled) {
+          _w.on("stalled", qp.onStalled);
+        }
+        // Add to queues collection
         this.workers.push(_w);
       }
     });
@@ -203,7 +213,7 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
 
     this.shutdownTriggered = true;
 
-    //Pause workers
+    //Pause all workers
     if (this.workers?.length) {
       let $pauseWorkers = this.workers.map((w) => {
         return w.pause();
@@ -211,7 +221,7 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
       await Promise.all($pauseWorkers);
     }
 
-    // Off all workers
+    // Close all workers
 
     if (this.workers?.length) {
       let $closeWorkers = this.workers.map((w) => {
@@ -220,7 +230,7 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
       await Promise.all($closeWorkers);
     }
 
-    //Off all queues
+    //Close all queues
     if (this.queues?.length) {
       let $closeQueues = this.queues.map((q) => {
         return q.close();

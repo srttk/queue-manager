@@ -1,6 +1,6 @@
 {
   "name": "@srttk/queue",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "BullMQ queues simplified.",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -9,7 +9,8 @@
     "example": "tsx ./src/example/app.ts",
     "example2": "tsx ./src/example/app2.ts",
     "example3": "tsx ./src/example/app3-namespace.ts",
-    "example4":"tsx ./src/example/app4-graceful-shutdown.ts",
+    "example4": "tsx ./src/example/app4-graceful-shutdown.ts",
+    "example5":"tsx ./src/example/app5.life-cycle-events.ts",
     "build": "pkgroll"
   },
   "repository": {
@@ -36,6 +37,6 @@
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
-    "bullmq": "^5.29.1"
+    "bullmq": "^5.0.0"
   }
 }
