@@ -21,4 +21,7 @@ export const greet: IQueueProcess<GreetPayload, Result> = {
   onCompleted: (job, result) => {
     console.log("@greet:onComplete : ", job.id, " Completed, result: ", result);
   },
+  onFailed: async (job) => {
+    console.log(`Job ${job?.id} failed`);
+  },
 };

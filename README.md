@@ -30,11 +30,28 @@ type GreetPayload = {
   name: string
 }
 
-export const greet: IQueueProcess<GreetPayload> = {
+type Result {
+  message: string
+}
+
+export const greet: IQueueProcess<GreetPayload, Result> = {
   name: "greet",
   process: async ({ data }) => {
-    console.log(`Hello ${data.name}`)
+
+    const message = `Hello ${data.name}`;
+    console.log(message)
+
+    // Return result - optional
+    return { messsage }
   }
+   onCompleted: (job, result) => {
+   // Job completed
+   console.info(`Job ${job.id} completed `, result)
+  },
+  onFailed: async (job) => {
+    // Job Failed
+    console.error(`Job $job.id} failed.`)
+  },
 }
 ```
 
@@ -72,6 +89,95 @@ async function start() {
 start()
 ```
 
+
+## Lifecycle Events
+
+The queue system provides comprehensive event handling through various lifecycle hooks. These events allow you to monitor and respond to different states of your jobs and queues.
+
+### Job Events
+
+#### `onCompleted(job: Job, result: any)`
+Triggered when a job is successfully completed.
+```typescript
+onCompleted: (job, result) => {
+  console.log(`Job ${job.id} completed with result:`, result);
+}
+```
+
+#### `onFailed(job: Job, error: Error)`
+Triggered when a job fails due to an error.
+```typescript
+onFailed: (job, error) => {
+  console.error(`Job ${job.id} failed:`, error.message);
+}
+```
+
+#### `onProgress(job: Job, progress: number)`
+Triggered when job progress is updated.
+```typescript
+onProgress: (job, progress) => {
+  console.log(`Job ${job.id} is ${progress}% complete`);
+}
+```
+
+#### `onActive(job: Job)`
+Triggered when a job starts processing.
+```typescript
+onActive: (job) => {
+  console.log(`Job ${job.id} has started processing`);
+}
+```
+
+#### `onStalled(job: Job)`
+Triggered when a job is stalled (worker is not responding).
+```typescript
+onStalled: (job) => {
+  console.warn(`Job ${job.id} has stalled`);
+}
+```
+
+### Queue Events
+
+#### `onReady()`
+Triggered when the queue is ready to process jobs.
+```typescript
+onReady: () => {
+  console.log('Queue is ready to process jobs');
+}
+```
+
+#### `onPaused()`
+Triggered when the queue is paused.
+```typescript
+onPaused: () => {
+  console.log('Queue has been paused');
+}
+```
+
+
+
+### Example with Multiple Events
+
+```typescript
+export const emailProcessor: IQueueProcess<EmailPayload> = {
+  name: "email",
+  process: async ({ data }) => {
+    // Process email
+  },
+  onCompleted: (job, result) => {
+    console.log(`Email sent successfully: ${job.id}`);
+  },
+  onFailed: (job, error) => {
+    console.error(`Failed to send email: ${error.message}`);
+  },
+  onProgress: (job, progress) => {
+    console.log(`Sending email... ${progress}%`);
+  },
+  onActive: (job) => {
+    console.log(`Starting to send email: ${job.id}`);
+  }
+}
+```
 
 ## Graceful shutdown
 QueueManager provides a graceful shutdown mechanism to ensure that in-progress jobs are completed and resources are properly released when your application terminates.
