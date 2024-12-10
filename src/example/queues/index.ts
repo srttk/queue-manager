@@ -13,5 +13,9 @@ export default new QueueManager(
       port: 6379,
     },
     namespace: "dev",
+    defaultJobOptions: {
+      removeOnComplete: true,
+      removeOnFail: true,
+    },
   }
 );

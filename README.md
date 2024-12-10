@@ -77,7 +77,7 @@ import queue from "./queue"
 
 async function start() {
   // Initialize queue manager
-  await queue.registerQueues();
+  await queue.startQueues();
   await queue.startWorkers();
 
   // Add job to queue
@@ -206,6 +206,79 @@ export default new QueueManager({ greet }, { namespace:"app1_development"})
 
 ```
 
+## Connection (Redis Connection)
+
+QueueManager accepts Redis connection settings as part of its initialization options. These settings follow the same format as BullMQ connection options.
+
+### Basic Connection Configuration
+
+```typescript
+export default new QueueManager(
+  { greet},
+  {
+    connection: {
+      host: "localhost",
+      port: 6379,
+    }
+  }
+);
+```
+
+### Configuration Options
+
+- **connection**: Redis connection settings
+  - `host`: Redis server hostname (default: "localhost")
+  - `port`: Redis server port (default: 6379)
+  - Additional BullMQ connection options are supported
+
+
+
+
+## Worker Groups
+
+The Queue Manager supports organizing workers into logical groups, allowing you to selectively start specific sets of workers. This is particularly useful when your application needs to run only certain workers based on different contexts or deployment scenarios.
+
+### Defining Worker Groups
+
+You can assign workers to groups by specifying a `groupName` in the queue process definition:
+
+```typescript
+export const greet: IQueueProcess<GreetPayload, Result> = {
+  name: "greet",
+  process: async ({ data }) => {
+    const message = `Hello ${data.name}`;
+    console.log(message);
+    return {
+      message,
+    };
+  },
+  groupName: "app1"  // Assign this worker to the "app1" group
+};
+```
+
+### Starting Specific Workers (Start workers by Group)
+
+To start workers belonging to a specific group:
+
+```typescript
+const qm = new QueueManager({ greet });
+qm.startQueues();
+qm.startWorkers('app1');  // Only starts workers in the "app1" group
+```
+
+### Use Cases
+
+- **Microservices**: Run different worker groups on different services
+- **Development Environment**: Start only relevant workers during local development
+- **Resource Optimization**: Run specific workers on dedicated servers based on their resource requirements
+- **Feature Segregation**: Organize workers by feature or domain area
+
+### Important Notes
+
+- Workers without a `groupName` will not be started when using `startWorkers(groupName)`
+
+- The `groupName` is optional - if not using worker groups, you can omit this property
+
 
 ## API Reference
 
@@ -219,9 +292,12 @@ new QueueManager(queues: Record<string, IQueueProcess>)
 
 #### Methods
 
-- `registerQueues()`: Initializes all defined queues
-- `startWorkers()`: Starts workers for all registered queues
+- `startQueues()`: Initializes all defined queues
+- `startWorkers(groupName?: string)`: Starts workers for all registered queues, optional group name
 - `addJob(queueName: string, jobId: string, data: any)`: Adds a new job to the specified queue
+- `getQueue(name: string)`: Get the bullmq queue instance
+- `getWorker(name: string)`: Get bullmq worker instance
+- `shutdown`: Close all queues and workers
 
 ### IQueueProcess Interface
 

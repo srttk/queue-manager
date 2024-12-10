@@ -1,6 +1,6 @@
 import queues from "./queues";
 async function start() {
-  await queues.registerQueues();
+  await queues.startQueues();
   await queues.startWorkers();
 }
 

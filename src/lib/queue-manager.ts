@@ -3,9 +3,7 @@ import {
   QueueOptions,
   Worker,
   WorkerOptions,
-  RedisConnection,
   ConnectionOptions,
-  QueueEvents,
   JobsOptions,
 } from "bullmq";
 import { IQueueProcess } from "./queue-process";
@@ -13,9 +11,16 @@ import { IQueueProcess } from "./queue-process";
 type QueueManagerConfig = {
   namespace?: string;
   connection: ConnectionOptions;
+  defaultWorkerOptions?: Partial<WorkerOptions>;
+  defaultQueueOptions?: Partial<QueueOptions>;
+  defaultJobOptions?: Partial<JobsOptions>;
 };
 
 const DEFAULT_NAMESPACE = "default_queues";
+
+const DEFAULT_QUEUE_OPTIONS: Partial<QueueOptions> = {};
+const DEFAULT_WORKER_OPTIONS: Partial<WorkerOptions> = {};
+const DEFAULT_JOB_OPTIONS: Partial<JobsOptions> = {};
 
 export class QueueManager<T extends Record<string, IQueueProcess>> {
   private _queueMap: T;
@@ -28,6 +33,13 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
   private connection: ConnectionOptions;
 
   private shutdownTriggered: boolean = false;
+
+  // Default options
+
+  private _defaultQueueOptions: Partial<QueueOptions> = DEFAULT_QUEUE_OPTIONS;
+  private _defaultWorkerOptions: Partial<WorkerOptions> =
+    DEFAULT_WORKER_OPTIONS;
+  private _defaultJobOptions: Partial<JobsOptions> = DEFAULT_JOB_OPTIONS;
 
   constructor(queueMaps: T, config?: QueueManagerConfig) {
     this._queueMap = queueMaps;
@@ -42,9 +54,8 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
     return this?.config?.namespace || DEFAULT_NAMESPACE;
   }
 
-  registerQueues() {
+  startQueues() {
     if (!this._queueMap) {
-      //TODO: Error no queues added
       return null;
     }
     let queues = Object.values(this._queueMap);
@@ -54,7 +65,7 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
     }
 
     queues.map((q) => {
-      let _options = { ...(q?.options || {}) };
+      let _options = { ...this._defaultQueueOptions, ...(q?.options || {}) };
       let _queue = new Queue(q.name, {
         prefix: this.namespace,
         connection: this.connection,
@@ -79,9 +90,15 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
       let exists = this.workers.find((w) => w.name === qp.name);
       if (!exists) {
         // Initialize worker instance
+
+        let _options = {
+          ...this._defaultWorkerOptions,
+          ...(qp.workerOptions || {}),
+        };
         let _w = new Worker(qp.name, qp.process, {
           connection: this.connection,
           prefix: this.namespace,
+          ..._options,
         });
 
         // Attach event handlers
@@ -150,6 +167,7 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
     }
 
     let _jobOptions: JobsOptions = {
+      ...this._defaultJobOptions,
       ...(qMapItem.defaultJobOptions || {}),
       ...(jobOptions || {}),
     };
