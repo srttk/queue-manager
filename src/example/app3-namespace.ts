@@ -19,7 +19,7 @@ let qm = new QueueManager(
 );
 
 async function start() {
-  await qm.registerQueues();
+  await qm.startQueues();
   await qm.startWorkers();
 
   setTimeout(async () => {
