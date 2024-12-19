@@ -10,7 +10,7 @@ import { IQueueProcess } from "./queue-process";
 
 type QueueManagerConfig = {
   namespace?: string;
-  connection: ConnectionOptions;
+  connection?: ConnectionOptions;
   defaultWorkerOptions?: Partial<WorkerOptions>;
   defaultQueueOptions?: Partial<QueueOptions>;
   defaultJobOptions?: Partial<JobsOptions>;
@@ -255,5 +255,9 @@ export class QueueManager<T extends Record<string, IQueueProcess>> {
       });
       await Promise.all($closeQueues);
     }
+  }
+
+  setConnection(conn: ConnectionOptions) {
+    this.connection = conn;
   }
 }
